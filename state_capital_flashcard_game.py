@@ -22,10 +22,12 @@ def main():
 
   while(True):
     # Validate user entry is num from 1-50
-    num_questions = int(input('How many quiz questions do you want to try? Enter a number between 1-50:\n'))
-    if(num_questions) > 0 and (num_questions <50):
-      break;
-    print('Invalid entry.')
+    try:
+      num_questions = int(input('How many quiz questions do you want to try? Enter a number between 1-50:\n'))
+      if(num_questions) > 0 and (num_questions <51):
+        break;
+    except:
+      print('Invalid entry.')
   
   print('Great, you will be asked the capitals of ' + str(num_questions) + ' states.')
   print('For each quiz question, type the name of the capital city OR type "skip" to move on to the next question.')
@@ -37,70 +39,89 @@ def main():
 
     # Select a state to quiz next
     while(True):
-      rand_num= random.randint(1,51)
+      rand_num= random.randint(0,49)
       # do not repeatany states already quizzed
       if(rand_num  in quizzed_set):
         continue
+
       # Add this to the list (set) of states quizzed so far
       quizzed_set.add(rand_num)
+      # DEBUG: 
+      # print('Random Number = ' + str(rand_num))
+
       rand_state = states_list[rand_num]    
       break
         
     # Quiz the user on the randomly-selected state
+    # Simulates a do-while loop by using while(True) and break statements
     while(True):
-
       print('')
       print('# ' + str(count) + ':')
       user_input= input('What is the capital of '+ rand_state +'? ')
+      
+      # Check answer and provide feedback options.
       result_code = check_answer(rand_state,user_input)
-      # Moves onto next quiz question. 
+
+      # If user chose 'skip': 
       if(result_code == -1):
         correct_ans = capitals_dict[rand_state]
         print('The correct answer is ' + correct_ans + '.')
-
-        print("Press Enter to continue.")
-        if(count < num_questions):
-          count +=1
-        break
-
-      # Incorrect answer; Try again.
+        continueOrQuit = input("Press Enter to continue or 'Q' to quit. ")
+        if(continueOrQuit.lower() == 'q'):
+          # DEBUG:
+          print('You entered: ' + continueOrQuit.lower())
+          return show_results()
+        else:
+          if(count < num_questions):
+            count +=1
+          break
+  
+      # If user gave incorrect answer:
       elif(result_code == 0):
-        continue;
+        continue
 
-      # Correct answer. Increase score and move on to next question.
+      # If user gave correct answer:
       else:
-        if(count < num_questions):
-          count +=1
-        score +=1
-        break
+        remaining_questions = (num_questions - count)
+        status_msg ='' 
+        if(remaining_questions != 1):
+          status_msg = (str(remaining_questions) + " questions remaining.")
+        else:
+          status_msg = (str(remaining_questions) + " question remaining.")
+
+        print((score+1), " of", count, " correct. " + status_msg)
+
+        continueOrQuit = input("Press Enter to continue or 'Q' to quit. ")
+        if(continueOrQuit.lower() == 'q'):
+          score+=1
+          return show_results()
+        else:
+          if(count < num_questions):
+            count +=1
+          score +=1
+          break
   # End for loop
   show_results()
 
 
 def check_answer(state,capital_guess):
+  global score
   # Look up correct answer (capital of state)
   correct_answer = capitals_dict[state]
 
-  no_caps_guess = capital_guess.lower()
-  if(no_caps_guess) == 'skip':
+  # If quz question is skipped
+  if(capital_guess.lower()) == 'skip':
     review_dict.update({state:correct_answer})
     return -1
 
 
-  # Provide feedback
-  if(no_caps_guess != correct_answer.lower()):
+  # If answer is Incorrect
+  if(capital_guess.lower() != correct_answer.lower()):
     print('Sorry! Please try again.')
     review_dict[state] = correct_answer
     return 0
+  # If answer is Correct
   else:
-    print("That's right! You have correctly answered", (score+1), " out of", count, " questions.")
-    remaining_questions = (num_questions - count)
-    if(remaining_questions != 1):
-      print("There are " + str(remaining_questions) + " questions remaining.")
-    else:
-      print("There is " + str(remaining_questions) + " question remaining.")
-
-    input('Press Enter to continue.')
     return 1
 
 def show_results():
@@ -112,6 +133,6 @@ def show_results():
   print('                   S U M M A R Y                      ')
   print('----------------------------------------------------')
 
-  print('You correctly entered ' + str(score) + ' out of ' + str(count) + ' U.S. state capitals. Below are the states and capitals you should review before trying this test again.')
+  print('You correctly answered ' + str(score) + ' out of ' + str(count) + ' attempted questions. Below are the states and capitals you should review before trying this test again.')
   print(review_dict)
 main()
